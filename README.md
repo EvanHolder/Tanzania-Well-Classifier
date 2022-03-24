@@ -32,22 +32,22 @@ This project is all about increasing access to clean, usable well water across t
 # Data Understanding
 
 The data includes 41 columns, many of which contain similar names and overlapping information. The first step was to research the columns, and remove features which do not help classify well functionality. In general, features I found important included:
-* Pump Design - Any feature which indicated information about the type of pump and/or pumping mechanism
-* Water Source - Any feature that described the water source, well type, or water quality
-* Pump Quality - Any feature that could indicate the quality of the pump, from original build/installation through continued maintenance and operation
-* Location/Government - Any feature that indicated the location of the pump
-* Monetary - Any feature that described how people pay for the pump
+* **Pump Design** - Any feature which indicated information about the type of pump and/or pumping mechanism
+* **Water Source** - Any feature that described the water source, well type, or water quality
+* **Pump Quality** - Any feature that could indicate the quality of the pump, from original build/installation through continued maintenance and operation
+* **Location/Government** - Any feature that indicated the location of the pump
+* **Monetary** - Any feature that described how people pay for the pump
 
 
 # Data Preparation
 
 The next step was to prepare the data for modeling.  The first thing I did was investigate the location feature for any relevant patterns.  Using the longitude and latitude coordinate, I was able to plot each well according to its functional status overlayed on top of a map of Tanzania.
 
-[](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/well_points.jpg)
+![](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/well_points.jpg)
 
 In the above map, you can see that functional and non-functional wells are mixed quite homogenously.  Therefore it is unlikely that the raw coordinates are going to play a role in predicting their status.  Just to be sure, I plotted the well points again with changing colors for indicating which local government authorities (LGA) they are under.
 
-[](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/well_points_fnr.jpg)
+![](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/well_points_fnr.jpg)
 
 Once again, as you can see. The functional (X's) and non-functional (O's) are not mixed in with each other evenly. This is a good indicator that location and will not be good predictors of functionality.
 
@@ -56,8 +56,8 @@ From here, I engineered a new variable `age` and label encoded a few of my categ
 
 
 So to solve this issue I built a target encoder which encodes the smoothed probability of the target for each unique element in a column. While there were target encoders available on the web, I built my own because:
- 1. Ternary target - Other probability encoders online are available to support a boolean target, but I could not find one for ternary. 
- 2. Smoothing - I want to custom build a mechanism into the function to smooth the probabilities of elements that occured less than 10 times. This way the encoder would weight dataset average of the target class more heavily when there are fewer instances of a particular element.
+ 1. **Ternary Target** - Other probability encoders online are available to support a boolean target, but I could not find one for ternary. 
+ 2. **Smoothing** - I want to custom build a mechanism into the function to smooth the probabilities of elements that occured less than 10 times. This way the encoder would weight dataset average of the target class more heavily when there are fewer instances of a particular element.
 
 I wrote a blog post on this function which you can read [here](https://medium.com/@evanholder_40386/target-encoding-and-smoothing-for-ternary-targets-476db9f40ceb). In summary, the `target_encode_columns` function will encode high cardinality categorical columns with each unique element's probability of each target class, and then smooth them with the dataset average for that target class according to the frequency with which it appears in the training set.
 
@@ -74,17 +74,17 @@ I trained three different types of models Decision Trees, Random Forest, and XGB
 ## Model Evaluation
 On the training set, the model performed at an 80% accuracy rate in predicting functional, non-function, or needs repair. When tested on the holdout set, the model achieved an accuracy of 81.6% - meaning it generalized well and was not overfit. The below chart shows the feature importances in our data:
 
-[](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/featurue_importance.jpg)
+![](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/featurue_importance.jpg)
 
 As shown, the most import feature in predicting functional status was the quanitity of water at the pump, then the waterpoint type, the which ward the well was located in. 
 
 In terms in real-life well functionality, the below confusion matrix highlights which wells are functional before application of the model 53.6%.  
 
-[](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/matrix_existing.jpg)
+![](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/matrix_existing.jpg)
 
 Using the model, we've correctly identified 396 model that need repair and 4486 non functional wells. These correctly identified wells could be fixed.  In terms of resource saving, if the workers sent to replace the 168 wells (which were actually only in need of a fix) actually just replaced the well instead, we could consider these fixed as well. 
 
-[](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/matrix_final.jpg)
+![](https://github.com/EvanHolder/Tanzania-Well-Classifier/blob/main/images/matrix_final.jpg)
 
 In the end, using the model, we could increase the number of working wells by 5050 to a total of 13046 or 86.7%
 
